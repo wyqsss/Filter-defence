@@ -78,25 +78,6 @@ def FGSM(model, test_loader, filter=None):
     return correct.float()/len(test_loader.dataset)
 
 
-def CW(model, test_loader):
-    adver_example = None
-    adver_target = None
-    correct = 0.0
-    for (data, target) in test_loader:
-        data = Variable(data)
-        target = Variable(target)
-        data = data.cuda()
-        target = target.cuda()
-        # model_fn = lambda x:F.nll_loss(model(x),target.to(device))
-        adver_example = carlini_wagner_l2(model, data, 10, y=torch.tensor(
-            [3]*128, device="cuda:0"), targeted=True)
-        adver_target = torch.max(model(adver_example), 1)[1]
-        print(f"adver_targer is : {adver_target}")
-        correct += adver_target.eq(target).sum()  # 统计相等的个数
-    print(f"acc after CW attack: {correct.float()/len(test_loader.dataset)}")
-    return correct.float()/len(test_loader.dataset)
-
-
 def test(net, test_loader):
     net.eval()
     correct = 0.0
@@ -148,5 +129,3 @@ if __name__ == '__main__':
         PGD(model, test_loader, "blur")     # 使用均值滤波进行防御
         PGD(model, test_loader, "median")   # 使用中值滤波进行防御
         PGD(model, test_loader, "gaussian")  # 使用高斯滤波进行防御
-    else:
-        CW(model, test_loader)
